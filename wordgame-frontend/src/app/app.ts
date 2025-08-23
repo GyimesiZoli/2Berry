@@ -35,7 +35,7 @@ export class App {
           next: res => {
             this.result = Array.isArray(res) ? res : [];
             if (this.result.length === 0) this.message = 'Nincs találat.';
-            this.cdr.detectChanges(); // <-- frissítjük a nézetet
+            this.cdr.detectChanges(); 
           },
           error: err => {
             this.message = (err?.error ?? 'Hiba történt a hívás során.');
@@ -55,7 +55,7 @@ export class App {
           next: res => {
             this.result = Array.isArray(res) ? res : [];
             if (this.result.length === 0) this.message = 'Nem található szólánc.';
-            this.cdr.detectChanges(); // <-- frissítjük a nézetet
+            this.cdr.detectChanges(); 
           },
           error: err => {
             this.message = (err?.error ?? 'Nem található szólánc.');

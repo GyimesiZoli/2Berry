@@ -1,4 +1,6 @@
-﻿using WordGame.Models;
+﻿using System.Globalization;
+using System.Text;
+using WordGame.Models;
 using WordGame.Tools;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,43 +11,44 @@ namespace WordGame.Controllers
     public class WordChainController : ControllerBase
     {
         private readonly WordList _wordService;
+        private readonly char[] _alphabet;
 
         public WordChainController(WordList wordService)
         {
             _wordService = wordService;
+
+            string NormHu(string s) =>
+                s.ToLower(new CultureInfo("hu-HU")).Normalize(NormalizationForm.FormC);
+
+            var letters = new HashSet<char>();
+            foreach (var w in _wordService.GetWords().Where(x => x.Length == 5).Select(NormHu))
+                foreach (var ch in w)
+                    letters.Add(ch);
+
+            _alphabet = letters.ToArray();
         }
 
         [HttpPost]
         public IActionResult GetWordChain([FromBody] WordChainRequest request)
         {
-            var startWord = request.Source.Trim().ToLower();
-            if (string.IsNullOrEmpty(startWord))
-            {
-                return BadRequest($"A kezdőszó üres, kérek helyette egy 5 betűs szót!");
-            }
-            else if (startWord.Length != 5)
-            {
-                return BadRequest($"A kezdőszó {startWord.Length} betűből áll, kérek helyette egy 5 betűst!");
-            }
-            var endWord = request.Target.Trim().ToLower();
-            if (string.IsNullOrEmpty(endWord))
-            {
-                return BadRequest($"A végszó üres, kérek helyette egy 5 betűs szót!");
-            }
-            else if (endWord.Length != 5)
-            {
-                return BadRequest($"A végszó {endWord.Length} betűből áll, kérek helyette egy 5 betűst!");
-            }
- 
+            string NormHu(string s) =>
+                s.ToLower(new CultureInfo("hu-HU")).Normalize(NormalizationForm.FormC);
+
+            var startWord = NormHu(request.Source?.Trim() ?? "");
+            if (string.IsNullOrEmpty(startWord)) return BadRequest("A kezdőszó üres, kérek helyette egy 5 betűs szót!");
+            if (startWord.Length != 5) return BadRequest($"A kezdőszó {startWord.Length} betűből áll, kérek helyette egy 5 betűst!");
+
+            var endWord = NormHu(request.Target?.Trim() ?? "");
+            if (string.IsNullOrEmpty(endWord)) return BadRequest("A végszó üres, kérek helyette egy 5 betűs szót!");
+            if (endWord.Length != 5) return BadRequest($"A végszó {endWord.Length} betűből áll, kérek helyette egy 5 betűst!");
+
             var words = _wordService.GetWords();
-            var wordSet = new HashSet<string>(words.Where(w => w.Length == 5));
+            var wordSet = new HashSet<string>(words.Where(w => w.Length == 5).Select(NormHu));
 
             var path = FindWordChainAStar(startWord, endWord, wordSet);
 
             if (path == null || path.Count == 0)
-            {
-                return NotFound("Sajnos tudok láncot alkotni a két szó között :(");
-            }
+                return NotFound("Sajnos nem tudok láncot alkotni a két szó között :(");
 
             return Ok(path);
         }
@@ -55,35 +58,27 @@ namespace WordGame.Controllers
             if (!wordSet.Contains(start) || !wordSet.Contains(end))
                 return null;
 
-            var cameFrom = new Dictionary<string, string?>(); 
-            var gScore = new Dictionary<string, int>();      
-
-            foreach (var w in wordSet)
-                gScore[w] = int.MaxValue;
-
+            var cameFrom = new Dictionary<string, string?>();
+            var gScore = new Dictionary<string, int>();
+            foreach (var w in wordSet) gScore[w] = int.MaxValue;
             gScore[start] = 0;
 
             var open = new PriorityQueue<string, int>();
             open.Enqueue(start, Heuristic(start, end));
-
             var closed = new HashSet<string>();
 
             while (open.Count > 0)
             {
                 var current = open.Dequeue();
-
-                if (current == end)
-                    return ReconstructPath(cameFrom, current);
+                if (current == end) return ReconstructPath(cameFrom, current);
 
                 closed.Add(current);
 
                 foreach (var neighbor in GetNeighbors(current, wordSet))
                 {
-                    if (closed.Contains(neighbor))
-                        continue;
+                    if (closed.Contains(neighbor)) continue;
 
                     int tentativeG = gScore[current] + 1;
-
                     if (tentativeG < gScore[neighbor])
                     {
                         cameFrom[neighbor] = current;
@@ -101,10 +96,7 @@ namespace WordGame.Controllers
         {
             int diff = 0;
             for (int i = 0; i < word.Length; i++)
-            {
-                if (word[i] != target[i])
-                    diff++;
-            }
+                if (word[i] != target[i]) diff++;
             return diff;
         }
 
@@ -114,8 +106,7 @@ namespace WordGame.Controllers
             while (cameFrom.ContainsKey(current))
             {
                 current = cameFrom[current]!;
-                if (current != null)
-                    path.Insert(0, current);
+                if (current != null) path.Insert(0, current);
             }
             return path;
         }
@@ -123,22 +114,17 @@ namespace WordGame.Controllers
         private IEnumerable<string> GetNeighbors(string word, HashSet<string> wordSet)
         {
             var chars = word.ToCharArray();
-
             for (int i = 0; i < chars.Length; i++)
             {
-                char original = chars[i];
-
-                for (char c = 'a'; c <= 'z'; c++)
+                var original = chars[i];
+                foreach (var c in _alphabet)
                 {
                     if (c == original) continue;
-
                     chars[i] = c;
-                    var newWord = new string(chars);
-
-                    if (wordSet.Contains(newWord))
-                        yield return newWord;
+                    var cand = new string(chars);
+                    if (wordSet.Contains(cand))
+                        yield return cand;
                 }
-
                 chars[i] = original;
             }
         }
