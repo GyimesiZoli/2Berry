@@ -1,0 +1,33 @@
+<div style="max-width: 560px; margin: auto; padding: 20px; font-family: system-ui, sans-serif;">
+  <h2>WordGame Frontend</h2>
+
+  <label for="mode">Feladat:</label>
+  <select id="mode" [(ngModel)]="mode" (change)="onModeChange()">
+    <option value="anagram">Anagramma</option>
+    <option value="wordchain">Szólánc</option>
+  </select>
+
+  <div style="margin-top: 16px;">
+    <!-- Anagramma: 1 input -->
+    <div *ngIf="mode === 'anagram'">
+      <input [(ngModel)]="input1" placeholder="Adj meg egy 5 betűs szót" />
+    </div>
+
+    <!-- Szólánc: 2 input -->
+    <div *ngIf="mode === 'wordchain'">
+      <input [(ngModel)]="input1" placeholder="Kezdőszó (5 betű)" />
+      <input [(ngModel)]="input2" placeholder="Végszó (5 betű)" style="margin-left: 10px;" />
+    </div>
+
+    <button (click)="run()" style="margin-top: 12px;">Futtatás</button>
+  </div>
+
+  <p *ngIf="message" style="color: red; margin-top: 16px;">{{ message }}</p>
+
+  <div *ngIf="result.length > 0" style="margin-top: 16px;">
+    <h3>Eredmény:</h3>
+    <ul>
+      <li *ngFor="let r of result">{{ r }}</li>
+    </ul>
+  </div>
+</div>

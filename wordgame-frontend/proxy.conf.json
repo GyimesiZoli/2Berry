@@ -1,0 +1,14 @@
+{
+  "/anagram": {
+    "target": "http://localhost:5095",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/wordchain": {
+    "target": "http://localhost:5095",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
