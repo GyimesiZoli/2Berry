@@ -1,0 +1,6 @@
+@WordGame_HostAddress = http://localhost:5095
+
+GET {{WordGame_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
