@@ -34,9 +34,9 @@ jobs:
       # --- Backend image build & push ---
       - name: Build & Push backend
         run: |
-          BACKEND_DF=./backend/Dockerfile
-          if [ ! -f "$BACKEND_DF" ]; then BACKEND_DF=./backend/Dockerfile.init; fi
-          docker build -f "$BACKEND_DF" -t $ACR_LOGIN_SERVER/backend:${{ github.sha }} ./backend
+          BACKEND_DF=./Dockerfile
+          if [ ! -f "$BACKEND_DF" ]; then BACKEND_DF=./Dockerfile.init; fi
+          docker build -f "$BACKEND_DF" -t $ACR_LOGIN_SERVER/backend:${{ github.sha }} .
           docker tag $ACR_LOGIN_SERVER/backend:${{ github.sha }} $ACR_LOGIN_SERVER/backend:latest
           docker push $ACR_LOGIN_SERVER/backend:${{ github.sha }}
           docker push $ACR_LOGIN_SERVER/backend:latest
