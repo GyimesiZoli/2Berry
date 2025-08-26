@@ -11,7 +11,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
     provideClientHydration(withEventReplay()),
-    provideHttpClient(withFetch()),          // HttpClient + fetch
-    importProvidersFrom(FormsModule)         // klasszikus forms modul
+    provideHttpClient(withFetch()),          
+    importProvidersFrom(FormsModule)         
   ]
 };

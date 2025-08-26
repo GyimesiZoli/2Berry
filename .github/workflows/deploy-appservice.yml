@@ -1,0 +1,75 @@
+name: Build & Deploy to Azure App Service (Compose)
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+  WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+  ACR_NAME: ${{ secrets.ACR_NAME }}
+  ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Azure login OIDC-vel (a titkokat már felvetted)
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # ACR login (az app-regisztrációd kapott AcrPush jogot)
+      - name: ACR login
+        run: az acr login --name $ACR_NAME
+
+      # --- Backend image build & push ---
+      - name: Build & Push backend
+        run: |
+          BACKEND_DF=./backend/Dockerfile
+          if [ ! -f "$BACKEND_DF" ]; then BACKEND_DF=./backend/Dockerfile.init; fi
+          docker build -f "$BACKEND_DF" -t $ACR_LOGIN_SERVER/backend:${{ github.sha }} ./backend
+          docker tag $ACR_LOGIN_SERVER/backend:${{ github.sha }} $ACR_LOGIN_SERVER/backend:latest
+          docker push $ACR_LOGIN_SERVER/backend:${{ github.sha }}
+          docker push $ACR_LOGIN_SERVER/backend:latest
+
+      # --- Frontend (nginx, 80-as port) build & push ---
+      - name: Build & Push frontend
+        run: |
+          FRONTEND_DF=./wordgame-frontend/Dockerfile
+          if [ ! -f "$FRONTEND_DF" ]; then FRONTEND_DF=./wordgame-frontend/Dockerfile.init; fi
+          docker build -f "$FRONTEND_DF" -t $ACR_LOGIN_SERVER/frontend:${{ github.sha }} ./wordgame-frontend
+          docker tag $ACR_LOGIN_SERVER/frontend:${{ github.sha }} $ACR_LOGIN_SERVER/frontend:latest
+          docker push $ACR_LOGIN_SERVER/frontend:${{ github.sha }}
+          docker push $ACR_LOGIN_SERVER/frontend:latest
+
+      # A sablon compose kitöltése az aktuális SHA-val
+      - name: Prepare compose for App Service
+        run: |
+          sed "s#FULLWORDGAME_ACR_LOGIN_SERVER#${ACR_LOGIN_SERVER}#g; s#APP_TAG#${{ github.sha }}#g" \
+            docker-compose.appservice.yml > docker-compose.to-deploy.yml
+
+      # Védőháló: WEBSITES_PORT=80 (nginx) – idempotens
+      - name: Ensure WEBSITES_PORT=80
+        run: |
+          az webapp config appsettings set \
+            --resource-group $RESOURCE_GROUP \
+            --name $WEBAPP_NAME \
+            --settings WEBSITES_PORT=80
+
+      # Web App átállítása Compose-ra a generált fájllal
+      - name: Configure Web App (Compose)
+        run: |
+          az webapp config container set \
+            --resource-group $RESOURCE_GROUP \
+            --name $WEBAPP_NAME \
+            --multicontainer-config-type compose \
+            --multicontainer-config-file docker-compose.to-deploy.yml

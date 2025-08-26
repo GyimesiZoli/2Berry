@@ -8,26 +8,30 @@
   </select>
 
   <div style="margin-top: 16px;">
-    <!-- Anagramma: 1 input -->
-    <div *ngIf="mode === 'anagram'">
+    @if (mode === 'anagram') {
       <input [(ngModel)]="input1" placeholder="Adj meg egy 5 betűs szót" />
-    </div>
+    }
 
-    <!-- Szólánc: 2 input -->
-    <div *ngIf="mode === 'wordchain'">
+    @if (mode === 'wordchain') {
       <input [(ngModel)]="input1" placeholder="Kezdőszó (5 betű)" />
       <input [(ngModel)]="input2" placeholder="Végszó (5 betű)" style="margin-left: 10px;" />
-    </div>
+    }
 
     <button (click)="run()" style="margin-top: 12px;">Futtatás</button>
   </div>
 
-  <p *ngIf="message" style="color: red; margin-top: 16px;">{{ message }}</p>
+  @if (message) {
+    <p style="color: red; margin-top: 16px;">{{ message }}</p>
+  }
 
-  <div *ngIf="result.length > 0" style="margin-top: 16px;">
-    <h3>Eredmény:</h3>
-    <ul>
-      <li *ngFor="let r of result">{{ r }}</li>
-    </ul>
-  </div>
+  @if (result.length > 0) {
+    <div style="margin-top: 16px;">
+      <h3>Eredmény:</h3>
+      <ul>
+        @for (r of result; track r) {
+          <li>{{ r }}</li>
+        }
+      </ul>
+    </div>
+  }
 </div>
