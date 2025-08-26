@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   frontend:
-    image: FULLWORDGAME_ACR_LOGIN_SERVER/frontend:APP_TAG
+    image: nginx:alpine
     depends_on:
       - backend
     environment:
