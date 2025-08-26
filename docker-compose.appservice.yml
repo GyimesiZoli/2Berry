@@ -1,13 +1,13 @@
 version: "3.8"
 services:
-  backend:
-    image: FULLWORDGAME_ACR_LOGIN_SERVER/backend:APP_TAG
-    environment:
-      - ASPNETCORE_URLS=http://+:8080
-
   frontend:
     image: FULLWORDGAME_ACR_LOGIN_SERVER/frontend:APP_TAG
     depends_on:
       - backend
     environment:
       - API_BASE_URL=http://backend:8080
+
+  backend:
+    image: FULLWORDGAME_ACR_LOGIN_SERVER/backend:APP_TAG
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
