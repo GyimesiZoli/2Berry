@@ -64,6 +64,13 @@ jobs:
             --resource-group $RESOURCE_GROUP \
             --name $WEBAPP_NAME \
             --settings WEBSITES_PORT=80
+      - name: Use Managed Identity for ACR pulls
+        run: |
+          az webapp config set \
+            --resource-group $RESOURCE_GROUP \
+            --name $WEBAPP_NAME \
+            --acr-use-identity true \
+            --acr-identity [system]
 
       # Web App átállítása Compose-ra a generált fájllal
       - name: Configure Web App (Compose)
