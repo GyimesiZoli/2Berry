@@ -1,11 +1,11 @@
 version: "3.8"
 services:
   frontend:
-    image: nginx:alpine    # (ideiglenes tesztkép)
+    image: FULLWORDGAME_ACR_LOGIN_SERVER/frontend:APP_TAG
     ports:
-      - "80:80"            # <-- EZ A LÉNYEG
-    depends_on:
-      - backend
+      - "80:80"   # <-- EZZEL teszed publikussá a 80-as portot
+    environment:
+      - API_BASE_URL=http://backend:8080
 
   backend:
     image: FULLWORDGAME_ACR_LOGIN_SERVER/backend:APP_TAG
