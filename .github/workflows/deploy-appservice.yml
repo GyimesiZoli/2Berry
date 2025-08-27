@@ -71,12 +71,6 @@ jobs:
             --name $WEBAPP_NAME \
             --acr-use-identity true \
             --acr-identity [system]
-      - name: Force ACR pulls via Managed Identity
-        run: |
-          WEBAPP_ID=$(az webapp show -g $RESOURCE_GROUP -n $WEBAPP_NAME --query id -o tsv)
-          az resource update --ids ${WEBAPP_ID}/config/web --set properties.acrUseManagedIdentityCreds=true
-          # biztos, ami biztos: user-assigned ne legyen beállítva
-          az resource update --ids ${WEBAPP_ID}/config/web --set properties.acrUserManagedIdentityID=null
 
       # Web App átállítása Compose-ra a generált fájllal
       - name: Configure Web App (Compose)
@@ -86,3 +80,10 @@ jobs:
             --name $WEBAPP_NAME \
             --multicontainer-config-type compose \
             --multicontainer-config-file docker-compose.to-deploy.yml
+            
+      - name: Force ACR pulls via Managed Identity
+        run: |
+          WEBAPP_ID=$(az webapp show -g $RESOURCE_GROUP -n $WEBAPP_NAME --query id -o tsv)
+          az resource update --ids ${WEBAPP_ID}/config/web --set properties.acrUseManagedIdentityCreds=true
+          # biztos, ami biztos: user-assigned ne legyen beállítva
+          az resource update --ids ${WEBAPP_ID}/config/web --set properties.acrUserManagedIdentityID=null
