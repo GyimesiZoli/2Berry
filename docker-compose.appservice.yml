@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   frontend:
-    image: nginx:alpine      # maradjon egyelőre a tesztkép, hogy kizárjuk az image-hibát
+    image: FULLWORDGAME_ACR_LOGIN_SERVER/frontend:APP_TAG
     ports:
       - "80"
     environment:
