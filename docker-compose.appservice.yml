@@ -1,9 +1,9 @@
 version: "3.8"
 services:
   frontend:
-    image: FULLWORDGAME_ACR_LOGIN_SERVER/frontend:APP_TAG
+    image: nginx:alpine      # maradjon egyelőre a tesztkép, hogy kizárjuk az image-hibát
     ports:
-      - "80:80"   # <-- EZZEL teszed publikussá a 80-as portot
+      - "80"
     environment:
       - API_BASE_URL=http://backend:8080
 
